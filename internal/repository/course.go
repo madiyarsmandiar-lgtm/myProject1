@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"errors"
 	"time"
 
+	"github.com/madiyarsmandiar-lgtm/myProject1/internal/apperrors"
 	"github.com/madiyarsmandiar-lgtm/myProject1/internal/model"
 )
 
@@ -35,7 +35,43 @@ func (cr *CourseRepository) GetAll() ([]model.Course, error) {
 func (cr *CourseRepository) GetById(id int) (*model.Course, error) {
 	course, ok := cr.courseMap[id]
 	if !ok {
-		return &model.Course{}, errors.New("course not found")
+		return &model.Course{}, apperrors.NotFound("course not found", nil)
 	}
 	return course, nil
+}
+
+func (cr *CourseRepository) Delete(id int) error {
+	_, ok := cr.courseMap[id]
+	if !ok {
+		return apperrors.NotFound("course is not found", nil)
+	}
+	delete(cr.courseMap, id)
+	return nil
+}
+
+func (cr *CourseRepository) Create(course *model.Course) (int, error) {
+	course.ID = len(cr.courseMap) + 1
+	cr.courseMap[course.ID] = course
+
+	return course.ID, nil
+}
+
+func (cr *CourseRepository) Update(id int, input *model.UpdateCourse) (model.Course, error) {
+	course, ok := cr.courseMap[id]
+	if !ok {
+		return model.Course{}, apperrors.NotFound("course is not found", nil)
+	}
+
+	if input.Title != nil {
+		course.Title = *input.Title
+	}
+	if input.Price != nil {
+		course.Price = *input.Price
+	}
+	if input.IsActive != nil {
+		course.IsActive = *input.IsActive
+	}
+
+	cr.courseMap[id] = course
+	return *course, nil
 }
